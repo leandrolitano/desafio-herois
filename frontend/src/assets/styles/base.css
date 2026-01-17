@@ -1,0 +1,21 @@
+:root {
+  --border: #ddd;
+  --border-soft: #eee;
+  --text: #111;
+  --muted: #666;
+  --danger: #b00020;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: var(--text);
+}
