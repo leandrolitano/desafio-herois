@@ -10,7 +10,43 @@
     {
       "label": "Docker: down",
       "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "Docker: down (remove volumes)",
+      "type": "shell",
       "command": "docker compose down -v",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: build",
+      "type": "shell",
+      "command": "cd backend && dotnet build",
+      "problemMatcher": ["$msCompile"]
+    },
+    {
+      "label": "Backend: test (unit + integration)",
+      "type": "shell",
+      "command": "cd backend && dotnet test src/Herois.Tests/Herois.Tests.csproj && dotnet test src/Herois.Api.IntegrationTests/Herois.Api.IntegrationTests.csproj",
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: install",
+      "type": "shell",
+      "command": "cd frontend && npm ci",
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: dev (local)",
+      "type": "shell",
+      "command": "cd frontend && npm install && npm run dev",
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: build",
+      "type": "shell",
+      "command": "cd frontend && npm ci && npm run build",
       "problemMatcher": []
     }
   ]

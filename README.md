@@ -1,117 +1,254 @@
-# Desafio Técnico — Cadastro de Heróis (Vue 3 + .NET 8 + CQRS/MediatR + SQL Server + Docker)
+# Desafio Tecnico — Cadastro de Herois (Vue 3 + .NET 8 + CQRS/MediatR + SQL Server + Docker)
 
-Este repositório implementa o desafio de **CRUD de heróis** com associação N:N de **Superpoderes**, usando:
+Este repositorio implementa um **CRUD de herois** com relacionamento **N:N** entre **Herois** e **Superpoderes**, conforme o desafio.
 
-- **Backend:** .NET 8 (Web API), **CQRS com MediatR**, EF Core
-- **Frontend:** Vue 3 + Vite + TypeScript
-- **Banco:** SQL Server (Docker)
-- **Execução:** Docker Compose (Linux containers)
+A solucao foi construida para rodar **100% via containers Linux** (Docker Compose) tanto em desenvolvimento quanto em execucao “prod-like”, e para ser confortavel de evoluir no VS Code.
 
-## Como rodar (Docker)
+> **Starter Kit:** veja `docs/STARTER_KIT.md`
+> 
+> **Decisoes:** veja `docs/DECISIONS.md`
+> 
+> **Contribuindo:** veja `CONTRIBUTING.md`
 
-1) Tenha **Docker** e **Docker Compose** instalados.
+---
 
-2) Na raiz do projeto, suba tudo:
+## Stack
+
+### Backend
+- .NET 8 (ASP.NET Core Web API)
+- **CQRS** com **MediatR** (Commands/Queries + Handlers)
+- **EF Core** + **SQL Server**
+- **FluentValidation** (validacao de Commands/Queries) + MediatR ValidationBehavior
+- **ProblemDetails** (RFC 7807) para padronizacao de erros
+- **RowVersion** (concorrencia otimista)
+- **Health checks** (`/health`)
+- **Correlation ID** (`X-Correlation-ID`)
+
+### Frontend
+- Vue 3 + Vite + TypeScript
+- Validade do formulario com **VeeValidate + Zod**
+- Componentizacao (tela, lista, formulario, multiselect pesquisavel, modal, toast)
+
+### Infra / Execucao
+- Docker Compose (SQL Server + API + Frontend)
+
+---
+
+## Funcionalidades entregues
+
+### Backend (API)
+- CRUD completo de **Herois**
+  - `POST /api/herois` (Create)
+  - `GET /api/herois` (Read - lista paginada + busca)
+  - `GET /api/herois/{id}` (Read - por id)
+  - `PUT /api/herois/{id}` (Update - requer rowVersion)
+  - `DELETE /api/herois/{id}` (Delete)
+- Endpoint de consulta de **Superpoderes** (somente leitura)
+  - `GET /api/superpoderes`
+- **Seed**: 100 herois (Marvel) + seed ampliado de superpoderes
+
+### Frontend (UI)
+- Listagem de herois com:
+  - **busca** por nome/nome de heroi
+  - **paginacao numerada** (com “...” quando necessario)
+  - exibicao de superpoderes como **badges** (somente nome)
+- Inclusao/Edicao em **modal (pop-up)** com indicacao clara do modo (inclusao vs edicao)
+- Superpoderes em **multi-select pesquisavel** (chips + busca, UX inspirado no CoreUI)
+- **Toast** de feedback para inclusao/alteracao/remocao (sucesso/erro)
+- Exclusao com **confirmacao** e **delete otimista** (rollback em caso de erro)
+
+---
+
+## Regras do desafio implementadas
+
+- **Id** gerado automaticamente.
+- **NomeHeroi** nao pode repetir.
+  - API retorna **409 Conflict** com mensagem tratada.
+- **Id invalido/inexistente** em consulta/alteracao/exclusao:
+  - invalido → **400 Bad Request** (validacao)
+  - inexistente → **404 Not Found**
+- **Listagem vazia** (`GET /api/herois`):
+  - decisao do projeto: retorna **404 Not Found** com mensagem (comportamento mantido conforme combinado).
+- **Delete** retorna **200 OK** com mensagem.
+
+---
+
+## Benfeitorias tecnicas implementadas
+
+### 1) CQRS + MediatR
+- Separacao clara entre **Commands** (escrita) e **Queries** (leitura)
+- Controllers “finos”: apenas validam entrada e delegam ao MediatR
+
+### 2) MediatR Pipeline Behaviors
+- **LoggingBehavior**: loga inicio/fim de cada request do MediatR
+- **ValidationBehavior**: executa FluentValidation antes do Handler
+- **TransactionBehavior**: abre transacao automaticamente para operacoes de escrita
+
+### 3) Validacao com FluentValidation
+- Validators para Commands/Queries (ex.: campos obrigatorios, ranges, paginacao)
+- Erros de validacao retornam **ValidationProblemDetails (400)**
+
+### 4) Erros padronizados com ProblemDetails (RFC 7807)
+- Falhas retornam `ProblemDetails`/`ValidationProblemDetails`
+- Inclui `traceId` e `correlationId` (quando aplicavel)
+
+### 5) Paginacao + busca no backend
+`GET /api/herois` suporta:
+- `page` (default 1)
+- `pageSize` (default 20)
+- `search` (opcional: procura em `Nome` e `NomeHeroi`)
+
+Retorno (quando houver dados): `Result<PagedResult<HeroiDto>>`.
+
+### 6) Concorrencia otimistica (RowVersion)
+- A entidade `Heroi` possui `RowVersion`
+- `PUT /api/herois/{id}` **requer** `rowVersion` no body (base64) para evitar sobrescrita concorrente
+- Em caso de conflito: **409 Conflict**
+
+### 7) Cache simples para Superpoderes
+- `GET /api/superpoderes` usa `IMemoryCache` (TTL curto)
+
+### 8) Observabilidade / Correlation ID
+- Middleware gera/propaga `X-Correlation-ID`
+
+### 9) Health checks
+- Endpoint: `GET /health`
+- Docker Compose aguarda o banco e a API ficarem saudaveis antes de subir o frontend
+
+### 10) Globalization no Docker
+- Configurado `<InvariantGlobalization>false</InvariantGlobalization>` para evitar problemas de ICU/cultura em Linux
+
+---
+
+## Decisoes tomadas durante a jornada (resumo)
+
+> Versao completa em `docs/DECISIONS.md`.
+
+- **Entidades do dominio com nomes “limpos”** (ex.: `Heroi`, `Superpoder`), evitando sufixos como `Entity`.
+  - DTOs/Requests usam sufixos (`HeroiDto`, `CreateHeroRequest`) para nao colidir.
+- **Superpoder.Nome** (C#) mapeado para coluna **Superpoder** (SQL).
+  - Motivo: C# nao permite membro com o mesmo nome do tipo (`CS0542`).
+- **Swagger** condicionado a `Development` por boas praticas; o Docker Compose define `ASPNETCORE_ENVIRONMENT=Development`.
+- **HealthChecks EF** exigem o pacote `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore`.
+- Seed (100 herois) **idempotente**: roda apenas se a tabela estiver vazia.
+
+---
+
+## Como rodar (Docker Compose)
+
+### Pre-requisitos
+- Docker + Docker Compose
+
+### Subir o ambiente
+Na raiz do projeto:
 
 ```bash
 # opcional (recomendado): defina uma senha forte
 export MSSQL_SA_PASSWORD='Your_strong_Passw0rd'
 
+# sobe: SQL Server + API + Frontend
 docker compose up --build
+
+# (alternativa) usando scripts
+./scripts/dev-up.sh
 ```
 
-3) Acessos:
+### Acessos
 - Frontend: http://localhost:5173
 - Swagger: http://localhost:8080/swagger
+- Health: http://localhost:8080/health
 
-> Observação: o backend aplica **migrations automaticamente** na inicialização (para fins do desafio) e faz seed de superpoderes na primeira execução.
->
-> Observação 2: o backend está com `<InvariantGlobalization>false</InvariantGlobalization>` para evitar erros de cultura/ICU em execução Linux (Docker).
+### Variaveis uteis
+- `MSSQL_SA_PASSWORD` — senha do usuario `sa` do SQL Server
+- `SEED_MARVEL_HEROES=true` — forca seed de 100 herois mesmo fora de `Development`
 
-## Endpoints
+---
+
+## Endpoints (resumo)
 
 - `GET /api/herois?page=1&pageSize=10&search=bat`
 - `GET /api/herois/{id}`
 - `POST /api/herois`
-- `PUT /api/herois/{id}` (**requer** `RowVersion` no body para concorrencia otimista)
+- `PUT /api/herois/{id}` (requer `rowVersion`)
 - `DELETE /api/herois/{id}`
-- `GET /api/superpoderes` (somente leitura)
+- `GET /api/superpoderes`
 
-## Regras do desafio implementadas
+### Observacao sobre `rowVersion` no update
+Para atualizar um heroi:
+1) faca `GET /api/herois/{id}`
+2) use o `rowVersion` retornado no body do `PUT`
 
-- **Id** gerado automaticamente.
-- **NomeHeroi** não pode repetir (**retorna 409 Conflict**).
-- **Id inexistente**: retorna **404 Not Found** com mensagem.
-- **Listagem vazia**: comportamento atual é **404 Not Found** com mensagem (podemos ajustar para 204 ou 200+[] se preferir).
-- Delete: retorna **200 OK** com mensagem.
-
-### Paginacao e filtro
-
-`GET /api/herois` suporta:
-
-- `page` (default 1)
-- `pageSize` (default 20)
-- `search` (opcional; procura por `Nome` ou `NomeHeroi`)
-
-O retorno (quando houver dados) e um `Result<PagedResult<HeroiDto>>`.
-
-### Concorrrencia otimista (RowVersion)
-
-Para atualizar (`PUT /api/herois/{id}`), envie o `RowVersion` recebido ao criar/buscar o heroi.
-Se o registro tiver sido alterado por outro processo, a API retorna **409 Conflict**.
-
-## Estrutura (backend)
-
-- `Application/` — Commands/Queries/Handlers (CQRS)
-- `Domain/` — Entidades
-- `Infrastructure/` — DbContext (EF Core)
-- `Api/` — Controllers
-
-## Estrutura (frontend)
-
-- `views/` — Telas (ex.: `HeroesView.vue`)
-- `components/heroes/` — Componentes de UI (lista, formulário)
-- `services/` — Client HTTP/API
-- `assets/styles/` — CSS global (base/layout/componentes)
-
-## Scripts SQL
-
-Em `infra/sql/init.sql` há um script opcional de criação/seed (caso você queira usar abordagem SQL-first). O projeto atual usa EF Code-first.
-
+---
 
 ## Testes (backend)
 
-### Unit tests (Handlers / CQRS)
-
-Na pasta `backend/`:
+### Unit tests (Handlers/CQRS)
 
 ```bash
 cd backend
 dotnet test src/Herois.Tests/Herois.Tests.csproj
+
+# (alternativa) usando script
+./scripts/test.sh
 ```
 
-### Integration tests (API endpoints)
+### Integration tests (API)
 
-Os testes de integração usam `WebApplicationFactory` com **SQLite in-memory** (não precisam subir SQL Server).
+Os testes de integracao usam `WebApplicationFactory` com **SQLite in-memory** (nao precisam subir SQL Server).
 
 ```bash
 cd backend
 dotnet test src/Herois.Api.IntegrationTests/Herois.Api.IntegrationTests.csproj
 ```
 
-> Observação: mantemos o comportamento atual da lista vazia (**GET /api/herois** retorna **404** com mensagem).
+---
 
-## UX (frontend)
+## Estrutura do repositorio
 
-- Lista e formulário separados em componentes
-- Listagem com **paginacao numerada** e filtro (search)
-- Formulario com validacao via **VeeValidate + Zod**
-- Exclusão pede confirmação (modal)
-- Operações exibem feedback via toast (sucesso/erro)
-- Validacao de formulario com **VeeValidate + Zod**
-- Paginacao com botoes numerados (e busca)
+### Backend
+- `backend/src/Herois.Api` — API (controllers, pipeline, DI)
+- `backend/src/Herois.Application` — CQRS (commands/queries/handlers, DTOs, behaviors, validators)
+- `backend/src/Herois.Domain` — entidades e regras do dominio
+- `backend/src/Herois.Infrastructure` — EF Core (DbContext, mapeamentos)
+- `backend/src/Herois.Tests` — unit tests dos handlers
+- `backend/src/Herois.Api.IntegrationTests` — integration tests dos endpoints
 
-### Melhorias adicionais
-- Formulário de inclusão/edição em **modal (pop-up)**, com indicação clara de **modo edição/inclusão**.
-- Campo de superpoderes com **multi-select pesquisável** (inspirado no CoreUI Multi Select), exibindo os selecionados como "chips".
-- Na tabela, superpoderes exibidos como **labels/badges** (somente o nome, sem descrição).
+### Frontend
+- `frontend/src/views` — telas (ex.: `HeroesView.vue`)
+- `frontend/src/components` — componentes (lista, formulario, multiselect, modal, toast)
+- `frontend/src/services` — client HTTP
+- `frontend/src/types` — tipagens (DTOs, ProblemDetails, paginacao)
+- `frontend/src/assets/styles` — CSS global
+
+---
+
+## Starter Kit do desenvolvedor
+
+- `docs/STARTER_KIT.md` (comandos, VS Code, scripts e fluxo de contribuicao)
+- `.env.example` (variaveis prontas)
+- `scripts/` (atalhos para subir, desligar, resetar DB e rodar testes)
+- `.vscode/` (tasks + launch + sugestoes de extensoes)
+- `CONTRIBUTING.md` + `.github/PULL_REQUEST_TEMPLATE.md` (padrao de contribuicao e checklist)
+
+---
+
+## Troubleshooting (problemas comuns)
+
+### Swagger retornando 404
+O Swagger esta habilitado apenas em `Development`.
+No Docker Compose ja definimos `ASPNETCORE_ENVIRONMENT=Development` no servico da API.
+
+### Erro “Invalid column name 'RowVersion'”
+Indica banco antigo sem a coluna.
+Em dev, o mais simples e recriar o volume:
+
+```bash
+./scripts/reset-db.sh
+```
+
+---
+
+## Proximos passos (opcionais)
+- CI (GitHub Actions) para build + testes
+- Export/Import de dados
+- UI refinada (theme, responsividade, acessibilidade avancada)

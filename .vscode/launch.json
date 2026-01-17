@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET: API (local)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Backend: build",
+      "program": "${workspaceFolder}/backend/src/Herois.Api/bin/Debug/net8.0/Herois.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/backend/src/Herois.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:8080",
+        "ConnectionStrings__SqlServer": "Server=localhost,1433;Database=DesafioHerois;User Id=sa;Password=Your_strong_Passw0rd;TrustServerCertificate=True;Encrypt=False"
+      },
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}
