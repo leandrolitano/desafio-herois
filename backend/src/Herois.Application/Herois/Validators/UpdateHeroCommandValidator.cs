@@ -10,11 +10,11 @@ public class UpdateHeroCommandValidator : AbstractValidator<UpdateHeroCommand>
             .GreaterThan(0).WithMessage("Id deve ser maior que 0");
 
         RuleFor(x => x.Nome)
-            .NotEmpty().WithMessage("Nome e obrigatorio")
+            .Must(v => !string.IsNullOrWhiteSpace(v)).WithMessage("Nome e obrigatorio")
             .MaximumLength(120);
 
         RuleFor(x => x.NomeHeroi)
-            .NotEmpty().WithMessage("NomeHeroi e obrigatorio")
+            .Must(v => !string.IsNullOrWhiteSpace(v)).WithMessage("NomeHeroi e obrigatorio")
             .MaximumLength(120);
 
         RuleFor(x => x.DataNascimento)

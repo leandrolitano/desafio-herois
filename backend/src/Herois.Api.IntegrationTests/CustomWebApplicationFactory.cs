@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Herois.Api.IntegrationTests;
@@ -36,6 +37,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(opt =>
             {
                 opt.UseSqlite(sqlite);
+                opt.ReplaceService<IModelCacheKeyFactory, ProviderModelCacheKeyFactory>();
             });
         });
     }

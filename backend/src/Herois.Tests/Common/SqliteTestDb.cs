@@ -2,6 +2,7 @@ using Herois.Domain.Entities;
 using Herois.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Herois.Tests.Common;
 
@@ -28,6 +29,7 @@ public sealed class SqliteTestDb : IAsyncDisposable
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite(connection)
+            .ReplaceService<IModelCacheKeyFactory, ProviderModelCacheKeyFactory>()
             .Options;
 
         var db = new AppDbContext(options);

@@ -1,7 +1,11 @@
+using System.Globalization;
+using System.Text;
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Herois.Api.Contracts;
+using Herois.Api.Errors;
 using Herois.Application.Common;
 using Herois.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +19,20 @@ public class HeroisEndpointsTests
         => factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+
+    private static string NormalizeForAssert(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        var formD = value.Normalize(NormalizationForm.FormD);
+        var sb = new StringBuilder(formD.Length);
+        foreach (var ch in formD)
+        {
+            var uc = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (uc != UnicodeCategory.NonSpacingMark) sb.Append(ch);
+        }
+        return sb.ToString().Normalize(NormalizationForm.FormC);
+    }
+
 
     private static async Task<T> ReadJson<T>(HttpResponseMessage res)
     {
@@ -150,7 +168,7 @@ public class HeroisEndpointsTests
 
         var problem = await ReadProblem(second);
         Assert.Equal(409, problem.Status);
-        Assert.Contains("Ja existe", problem.Detail, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Ja existe", NormalizeForAssert(problem.Detail), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -175,9 +193,10 @@ public class HeroisEndpointsTests
         var res = await client.PostAsJsonAsync("/api/herois", payload);
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
 
-        var problem = await ReadProblem(res);
+        var problem = await ReadJson<ApiValidationProblemDetails>(res);
         Assert.Equal(400, problem.Status);
-        Assert.Contains("NomeHeroi", problem.Detail);
+        Assert.Equal("Falha de validacao", problem.Title);
+        Assert.True(problem.Errors.ContainsKey("NomeHeroi"));
     }
 
     [Fact]
@@ -189,9 +208,10 @@ public class HeroisEndpointsTests
         var res = await client.GetAsync("/api/herois/0");
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
 
-        var problem = await ReadProblem(res);
+        var problem = await ReadJson<ApiValidationProblemDetails>(res);
         Assert.Equal(400, problem.Status);
-        Assert.Contains("Id", problem.Detail);
+        Assert.Equal("Falha de validacao", problem.Title);
+        Assert.True(problem.Errors.ContainsKey("Id"));
     }
 
     [Fact]
@@ -217,7 +237,7 @@ public class HeroisEndpointsTests
         var res = await client.PutAsJsonAsync("/api/herois/0", payload);
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
 
-        var problem = await ReadJson<ValidationProblemDetails>(res);
+        var problem = await ReadJson<ApiValidationProblemDetails>(res);
         Assert.Equal(400, problem.Status);
         Assert.Equal("Falha de validacao", problem.Title);
         Assert.True(problem.Errors.ContainsKey("Id"));

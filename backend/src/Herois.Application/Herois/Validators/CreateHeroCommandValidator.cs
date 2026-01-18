@@ -7,11 +7,11 @@ public class CreateHeroCommandValidator : AbstractValidator<CreateHeroCommand>
     public CreateHeroCommandValidator()
     {
         RuleFor(x => x.Nome)
-            .NotEmpty().WithMessage("Nome e obrigatorio")
+            .Must(v => !string.IsNullOrWhiteSpace(v)).WithMessage("Nome e obrigatorio")
             .MaximumLength(120);
 
         RuleFor(x => x.NomeHeroi)
-            .NotEmpty().WithMessage("NomeHeroi e obrigatorio")
+            .Must(v => !string.IsNullOrWhiteSpace(v)).WithMessage("NomeHeroi e obrigatorio")
             .MaximumLength(120);
 
         RuleFor(x => x.DataNascimento)

@@ -7,6 +7,7 @@ using Herois.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,10 +41,20 @@ builder.Services.AddProblemDetails(options =>
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-var connectionString = builder.Configuration.GetConnectionString("SqlServer")
-    ?? throw new InvalidOperationException("Connection string SqlServer not found.");
+var connectionString = builder.Configuration.GetConnectionString("SqlServer");
 
-builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connectionString));
+// Em testes de integracao (WebApplicationFactory) o DbContext e substituido por SQLite in-memory.
+// Portanto, nao podemos falhar aqui caso a connection string nao exista.
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    connectionString = "Server=db;Database=DesafioHerois;User Id=sa;Password=Your_strong_Passw0rd;TrustServerCertificate=True;Encrypt=False";
+}
+
+builder.Services.AddDbContext<AppDbContext>(opt =>
+{
+    opt.UseSqlServer(connectionString);
+    opt.ReplaceService<IModelCacheKeyFactory, ProviderModelCacheKeyFactory>();
+});
 
 builder.Services.AddCors(opt =>
 {
@@ -60,6 +71,12 @@ var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseExceptionHandler();
+// IMPORTANT: this must come AFTER UseExceptionHandler().
+// Otherwise, ExceptionHandlerMiddleware would intercept ValidationException first,
+// producing generic ProblemDetails and logging it as an "unhandled" exception.
+// With this order, validation failures are handled as normal 400 responses with a proper
+// RFC7807 payload containing the "errors" map.
+app.UseMiddleware<FluentValidationExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,0 +1,12 @@
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/bin/Debug/net8.0/Herois.Domain.deps.json
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/bin/Debug/net8.0/Herois.Domain.dll
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/bin/Debug/net8.0/Herois.Domain.pdb
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.AssemblyInfoInputs.cache
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.AssemblyInfo.cs
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.csproj.CoreCompileInputs.cache
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.sourcelink.json
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.dll
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/refint/Herois.Domain.dll
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/Herois.Domain.pdb
+/home/llitano/dockers/desafio-herois/backend/src/Herois.Domain/obj/Debug/net8.0/ref/Herois.Domain.dll

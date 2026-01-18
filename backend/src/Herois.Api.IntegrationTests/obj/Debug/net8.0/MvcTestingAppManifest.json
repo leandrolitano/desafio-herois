@@ -1,0 +1,6 @@
+{
+  "Herois.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/llitano\/dockers\/desafio-herois\/backend\/src\/Herois.Api",
+  "Herois.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/llitano\/dockers\/desafio-herois\/backend\/src\/Herois.Application",
+  "Herois.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/llitano\/dockers\/desafio-herois\/backend\/src\/Herois.Domain",
+  "Herois.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/home\/llitano\/dockers\/desafio-herois\/backend\/src\/Herois.Infrastructure"
+}

@@ -18,6 +18,26 @@ public class UpdateHeroHandler : IRequestHandler<UpdateHeroCommand, Result<Heroi
         if (request.Id <= 0)
             return Result<HeroiDto>.Fail(400, "Id invalido.");
 
+        // Concurrency pre-check (provider-agnostic):
+        // Some providers used in tests (SQLite in-memory) do not emulate SQL Server's rowversion
+        // perfectly for concurrency exceptions. To keep behavior consistent across providers,
+        // we first compare the rowversion the client sent with the current value in the database.
+        // We still keep EF's concurrency token in place as a second line of defense.
+        var currentRowVersion = await _db.Herois
+            .AsNoTracking()
+            .Where(h => h.Id == request.Id)
+            .Select(h => h.RowVersion)
+            .FirstOrDefaultAsync(ct);
+
+        if (currentRowVersion is null)
+            return Result<HeroiDto>.Fail(404, "Heroi nao encontrado.");
+
+        if (request.RowVersion is null || request.RowVersion.Length == 0)
+            return Result<HeroiDto>.Fail(400, "RowVersion invalido.");
+
+        if (!currentRowVersion.SequenceEqual(request.RowVersion))
+            return Result<HeroiDto>.Fail(409, "Conflito de concorrencia: o registro foi alterado por outro processo.");
+
         var hero = await _db.Herois
             .Include(h => h.HeroisSuperpoderes)
             .FirstOrDefaultAsync(h => h.Id == request.Id, ct);
@@ -25,7 +45,8 @@ public class UpdateHeroHandler : IRequestHandler<UpdateHeroCommand, Result<Heroi
         if (hero is null)
             return Result<HeroiDto>.Fail(404, "Heroi nao encontrado.");
 
-        // Concurrency: garante que estamos atualizando a versao que o usuario leu
+        // Concurrency token: garante que estamos atualizando a versao que o usuario leu.
+        // (Second line of defense against races between pre-check and SaveChanges.)
         _db.Entry(hero).Property(h => h.RowVersion).OriginalValue = request.RowVersion;
 
         var duplicate = await _db.Herois
