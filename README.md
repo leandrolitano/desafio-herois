@@ -2,11 +2,11 @@
 
 Este repositorio implementa um **CRUD de herois** com relacionamento **N:N** entre **Herois** e **Superpoderes**, conforme o desafio.
 
-A solucao foi construida para rodar **100% via containers Linux** (Docker Compose) tanto em desenvolvimento quanto em execucao “prod-like”, e para ser confortavel de evoluir no VS Code.
+A solução foi construida para rodar **100% via containers Linux** (Docker Compose) tanto em desenvolvimento quanto em execução “prod-like”, e para ser confortavel de evoluir no VS Code.
 
 > **Starter Kit:** veja `docs/STARTER_KIT.md`
 > 
-> **Decisoes:** veja `docs/DECISIONS.md`
+> **Decisões:** veja `docs/DECISIONS.md`
 > 
 > **Contribuindo:** veja `CONTRIBUTING.md`
 
@@ -18,18 +18,18 @@ A solucao foi construida para rodar **100% via containers Linux** (Docker Compos
 - .NET 8 (ASP.NET Core Web API)
 - **CQRS** com **MediatR** (Commands/Queries + Handlers)
 - **EF Core** + **SQL Server**
-- **FluentValidation** (validacao de Commands/Queries) + MediatR ValidationBehavior
-- **ProblemDetails** (RFC 7807) para padronizacao de erros
-- **RowVersion** (concorrencia otimista)
+- **FluentValidation** (validação de Commands/Queries) + MediatR ValidationBehavior
+- **ProblemDetails** (RFC 7807) para padronização de erros
+- **RowVersion** (concorrência otimista)
 - **Health checks** (`/health`)
 - **Correlation ID** (`X-Correlation-ID`)
 
 ### Frontend
 - Vue 3 + Vite + TypeScript
 - Validade do formulario com **VeeValidate + Zod**
-- Componentizacao (tela, lista, formulario, multiselect pesquisavel, modal, toast)
+- Componentização (tela, lista, formulário, multiselect pesquisável, modal, toast)
 
-### Infra / Execucao
+### Infra / Execução
 - Docker Compose (SQL Server + API + Frontend)
 
 ---
@@ -50,12 +50,12 @@ A solucao foi construida para rodar **100% via containers Linux** (Docker Compos
 ### Frontend (UI)
 - Listagem de herois com:
   - **busca** por nome/nome de heroi
-  - **paginacao numerada** (com “...” quando necessario)
-  - exibicao de superpoderes como **badges** (somente nome)
-- Inclusao/Edicao em **modal (pop-up)** com indicacao clara do modo (inclusao vs edicao)
+  - **paginação numerada** (com “...” quando necessario)
+  - exibição de superpoderes como **badges** (somente nome)
+- Inclusao/Edição em **modal (pop-up)** com indicação clara do modo (inclusao vs edição)
 - Superpoderes em **multi-select pesquisavel** (chips + busca, UX inspirado no CoreUI)
-- **Toast** de feedback para inclusao/alteracao/remocao (sucesso/erro)
-- Exclusao com **confirmacao** e **delete otimista** (rollback em caso de erro)
+- **Toast** de feedback para inclusao/alteração/remoção (sucesso/erro)
+- Exclusao com **confirmação** e **delete otimista** (rollback em caso de erro)
 
 ---
 
@@ -64,8 +64,8 @@ A solucao foi construida para rodar **100% via containers Linux** (Docker Compos
 - **Id** gerado automaticamente.
 - **NomeHeroi** nao pode repetir.
   - API retorna **409 Conflict** com mensagem tratada.
-- **Id invalido/inexistente** em consulta/alteracao/exclusao:
-  - invalido → **400 Bad Request** (validacao)
+- **Id invalido/inexistente** em consulta/alteração/exclusao:
+  - invalido → **400 Bad Request** (validação)
   - inexistente → **404 Not Found**
 - **Listagem vazia** (`GET /api/herois`):
   - decisao do projeto: retorna **404 Not Found** com mensagem (comportamento mantido conforme combinado).
@@ -76,23 +76,23 @@ A solucao foi construida para rodar **100% via containers Linux** (Docker Compos
 ## Benfeitorias tecnicas implementadas
 
 ### 1) CQRS + MediatR
-- Separacao clara entre **Commands** (escrita) e **Queries** (leitura)
+- Separação clara entre **Commands** (escrita) e **Queries** (leitura)
 - Controllers “finos”: apenas validam entrada e delegam ao MediatR
 
 ### 2) MediatR Pipeline Behaviors
 - **LoggingBehavior**: loga inicio/fim de cada request do MediatR
 - **ValidationBehavior**: executa FluentValidation antes do Handler
-- **TransactionBehavior**: abre transacao automaticamente para operacoes de escrita
+- **TransactionBehavior**: abre transação automaticamente para operacoes de escrita
 
-### 3) Validacao com FluentValidation
-- Validators para Commands/Queries (ex.: campos obrigatorios, ranges, paginacao)
-- Erros de validacao retornam **ValidationProblemDetails (400)**
+### 3) Validação com FluentValidation
+- Validators para Commands/Queries (ex.: campos obrigatorios, ranges, paginação)
+- Erros de validação retornam **ValidationProblemDetails (400)**
 
 ### 4) Erros padronizados com ProblemDetails (RFC 7807)
 - Falhas retornam `ProblemDetails`/`ValidationProblemDetails`
 - Inclui `traceId` e `correlationId` (quando aplicavel)
 
-### 5) Paginacao + busca no backend
+### 5) Paginação + busca no backend
 `GET /api/herois` suporta:
 - `page` (default 1)
 - `pageSize` (default 20)
@@ -173,7 +173,7 @@ docker compose up --build
 - `DELETE /api/herois/{id}`
 - `GET /api/superpoderes`
 
-### Observacao sobre `rowVersion` no update
+### Observação sobre `rowVersion` no update
 Para atualizar um heroi:
 1) faca `GET /api/herois/{id}`
 2) use o `rowVersion` retornado no body do `PUT`
@@ -194,7 +194,7 @@ dotnet test src/Herois.Tests/Herois.Tests.csproj
 
 ### Integration tests (API)
 
-Os testes de integracao usam `WebApplicationFactory` com **SQLite in-memory** (nao precisam subir SQL Server).
+Os testes de integração usam `WebApplicationFactory` com **SQLite in-memory** (nao precisam subir SQL Server).
 
 ```bash
 cd backend
@@ -217,18 +217,18 @@ dotnet test src/Herois.Api.IntegrationTests/Herois.Api.IntegrationTests.csproj
 - `frontend/src/views` — telas (ex.: `HeroesView.vue`)
 - `frontend/src/components` — componentes (lista, formulario, multiselect, modal, toast)
 - `frontend/src/services` — client HTTP
-- `frontend/src/types` — tipagens (DTOs, ProblemDetails, paginacao)
+- `frontend/src/types` — tipagens (DTOs, ProblemDetails, paginação)
 - `frontend/src/assets/styles` — CSS global
 
 ---
 
 ## Starter Kit do desenvolvedor
 
-- `docs/STARTER_KIT.md` (comandos, VS Code, scripts e fluxo de contribuicao)
+- `docs/STARTER_KIT.md` (comandos, VS Code, scripts e fluxo de contribuição)
 - `.env.example` (variaveis prontas)
 - `scripts/` (atalhos para subir, desligar, resetar DB e rodar testes)
 - `.vscode/` (tasks + launch + sugestoes de extensoes)
-- `CONTRIBUTING.md` + `.github/PULL_REQUEST_TEMPLATE.md` (padrao de contribuicao e checklist)
+- `CONTRIBUTING.md` + `.github/PULL_REQUEST_TEMPLATE.md` (padrao de contribuição e checklist)
 
 ---
 
