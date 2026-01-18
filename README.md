@@ -85,12 +85,12 @@ A solução foi construida para rodar **100% via containers Linux** (Docker Comp
 - **TransactionBehavior**: abre transação automaticamente para operacoes de escrita
 
 ### 3) Validação com FluentValidation
-- Validators para Commands/Queries (ex.: campos obrigatorios, ranges, paginação)
+- Validators para Commands/Queries (ex.: campos obrigatórios, ranges, paginação)
 - Erros de validação retornam **ValidationProblemDetails (400)**
 
 ### 4) Erros padronizados com ProblemDetails (RFC 7807)
 - Falhas retornam `ProblemDetails`/`ValidationProblemDetails`
-- Inclui `traceId` e `correlationId` (quando aplicavel)
+- Inclui `traceId` e `correlationId` (quando aplicável)
 
 ### 5) Paginação + busca no backend
 `GET /api/herois` suporta:
@@ -113,14 +113,14 @@ Retorno (quando houver dados): `Result<PagedResult<HeroiDto>>`.
 
 ### 9) Health checks
 - Endpoint: `GET /health`
-- Docker Compose aguarda o banco e a API ficarem saudaveis antes de subir o frontend
+- Docker Compose aguarda o banco e a API ficarem saudáveis antes de subir o frontend
 
 ### 10) Globalization no Docker
 - Configurado `<InvariantGlobalization>false</InvariantGlobalization>` para evitar problemas de ICU/cultura em Linux
 
 ---
 
-## Decisoes tomadas durante a jornada (resumo)
+## Decisões tomadas durante a jornada (resumo)
 
 > Versao completa em `docs/DECISIONS.md`.
 
@@ -158,7 +158,7 @@ docker compose up --build
 - Swagger: http://localhost:8080/swagger
 - Health: http://localhost:8080/health
 
-### Variaveis uteis
+### Variáveis úteis
 - `MSSQL_SA_PASSWORD` — senha do usuario `sa` do SQL Server
 - `SEED_MARVEL_HEROES=true` — forca seed de 100 herois mesmo fora de `Development`
 
@@ -194,7 +194,7 @@ dotnet test src/Herois.Tests/Herois.Tests.csproj
 
 ### Integration tests (API)
 
-Os testes de integração usam `WebApplicationFactory` com **SQLite in-memory** (nao precisam subir SQL Server).
+Os testes de integração usam `WebApplicationFactory` com **SQLite in-memory** (não precisam subir SQL Server).
 
 ```bash
 cd backend
@@ -225,22 +225,12 @@ dotnet test src/Herois.Api.IntegrationTests/Herois.Api.IntegrationTests.csproj
 ## Starter Kit do desenvolvedor
 
 - `docs/STARTER_KIT.md` (comandos, VS Code, scripts e fluxo de contribuição)
-- `.env.example` (variaveis prontas)
+- `.env.example` (variáveis prontas)
 - `scripts/` (atalhos para subir, desligar, resetar DB e rodar testes)
 - `.vscode/` (tasks + launch + sugestoes de extensoes)
 - `CONTRIBUTING.md` + `.github/PULL_REQUEST_TEMPLATE.md` (padrao de contribuição e checklist)
 
 ---
-
-## Troubleshooting (problemas comuns)
-
-### Swagger retornando 404
-O Swagger esta habilitado apenas em `Development`.
-No Docker Compose ja definimos `ASPNETCORE_ENVIRONMENT=Development` no servico da API.
-
-### Erro “Invalid column name 'RowVersion'”
-Indica banco antigo sem a coluna.
-Em dev, o mais simples e recriar o volume:
 
 ```bash
 ./scripts/reset-db.sh
@@ -248,7 +238,7 @@ Em dev, o mais simples e recriar o volume:
 
 ---
 
-## Proximos passos (opcionais)
+## Próximos passos
 - CI (GitHub Actions) para build + testes
 - Export/Import de dados
-- UI refinada (theme, responsividade, acessibilidade avancada)
+- UI refinada (theme, responsividade, acessibilidade avançada)
